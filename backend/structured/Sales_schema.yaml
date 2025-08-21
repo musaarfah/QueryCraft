@@ -1,0 +1,23 @@
+tables:
+- name: customers
+  description: ''
+  columns:
+  - name: customerid
+    type: integer
+  - name: customername
+    type: character varying
+  - name: city
+    type: character varying
+  - name: country
+    type: character varying
+- name: products
+  description: ''
+  columns:
+  - name: productid
+    type: integer
+  - name: productname
+    type: character varying
+  - name: unitprice
+    type: numeric
+  - name: stock
+    type: integer

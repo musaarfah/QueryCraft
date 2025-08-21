@@ -1,0 +1,38 @@
+tables:
+- name: departments
+  description: ''
+  columns:
+  - name: departmentid
+    type: integer
+  - name: departmentname
+    type: character varying
+  - name: managerid
+    type: integer
+- name: employees
+  description: ''
+  columns:
+  - name: employeeid
+    type: integer
+  - name: fullname
+    type: character varying
+  - name: department
+    type: character varying
+  - name: jobtitle
+    type: character varying
+  - name: hiredate
+    type: date
+  - name: salary
+    type: numeric
+- name: salaries
+  description: ''
+  columns:
+  - name: salaryid
+    type: integer
+  - name: employeeid
+    type: integer
+  - name: basesalary
+    type: numeric
+  - name: bonus
+    type: numeric
+  - name: effectivedate
+    type: date

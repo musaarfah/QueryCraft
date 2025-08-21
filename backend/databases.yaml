@@ -1,0 +1,21 @@
+databases:
+  HR:
+    host: localhost
+    port: 5432
+    dbname: hr_db
+    user: postgres
+    password: 4321
+
+  Sales:
+    host: localhost
+    port: 5432
+    dbname: sales_db
+    user: postgres
+    password: 4321
+
+  Company:
+    host: localhost
+    port: 5432
+    dbname: company_db
+    user: postgres
+    password: 4321

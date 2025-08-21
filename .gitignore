@@ -1,0 +1,63 @@
+# === Python ===
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pkl
+*.db
+*.sqlite3
+
+# === Virtual environments ===
+.venv/
+venv/
+env/
+ENV/
+
+# === Environment files ===
+.env
+*.env
+
+# === IDEs/editors ===
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# === OS generated ===
+.DS_Store
+Thumbs.db
+
+# === Logs ===
+*.log
+logs/
+
+# === Byte-compiled / Cython ===
+*.so
+
+# === Build & packaging ===
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# === Jupyter Notebooks ===
+.ipynb_checkpoints/
+
+# === Caches ===
+.cache/
+.pytest_cache/
+__snapshots__/
+
+# === Node / frontend (if you add Next.js later) ===
+node_modules/
+.next/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# === Data files (optional if you have test CSV/PDF/etc.) ===
+*.csv
+*.parquet
+*.tsv
+*.json
+*.pdf
