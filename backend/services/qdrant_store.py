@@ -1,7 +1,7 @@
 import uuid
 from typing import List, Dict, Any, Optional
 from qdrant_client import QdrantClient
-from qdrant_client.models import Distance, VectorParams, PointStruct, Filter, FieldCondition, MatchValue
+from qdrant_client.models import Distance, VectorParams, PointStruct, Filter, FieldCondition, MatchValue, PayloadSchemaType
 from .chunk_embed import embedding_dim
 
 def get_qdrant_client(host=None, port=None, url=None, api_key=None,timeout: float = 30.0) -> QdrantClient:
@@ -15,7 +15,21 @@ def ensure_collection(client: QdrantClient, collection_name: str, vector_size: i
         client.recreate_collection(
             collection_name=collection_name,
             vectors_config=VectorParams(size=vector_size, distance=Distance.COSINE),
+            payload_schema={
+                "document_id": PayloadSchemaType.KEYWORD
+            }
         )
+
+    # Ensure document_id is indexed for filtering
+    try:
+        client.create_payload_index(
+            collection_name=collection_name,
+            field_name="document_id",
+            field_schema=PayloadSchemaType.KEYWORD  # just use this
+        )
+    except Exception as e:
+        print(f"Payload index creation skipped (probably exists): {e}")
+
 
 def upsert_chunks(
     client: QdrantClient,
