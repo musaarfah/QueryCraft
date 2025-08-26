@@ -12,6 +12,10 @@ const nextConfig: NextConfig = {
     // your project has type errors.
     ignoreBuildErrors: true,
   },
+  // Force dynamic rendering for client components
+  experimental: {
+    dynamicIO: false,
+  },
 };
 
 export default nextConfig;

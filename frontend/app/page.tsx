@@ -10,14 +10,17 @@ export default function Home() {
   const checkHealth = async () => {
     setHealth('Checking...')
     try {
-      const res = await fetch('http://localhost:8000/health')
+      // Use environment variable for API URL, fallback to localhost for development
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+      const res = await fetch(`${apiUrl}/health`)
       const data = await res.json()
       if (res.ok) {
         setHealth('✅ Health OK')
       } else {
         setHealth(`❌ Error`)
       }
-    } catch {
+    } catch (error) {
+      console.error('Health check failed:', error)
       setHealth('❌ Error connecting to backend')
     }
   }
