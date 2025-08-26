@@ -59,7 +59,6 @@ yarn-error.log*
 *.csv
 *.parquet
 *.tsv
-*.json
 *.pdf
 
 
