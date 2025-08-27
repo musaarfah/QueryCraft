@@ -4,18 +4,18 @@ databases:
     port: 5432
     dbname: hr_db
     user: postgres
-    password: 4321
+    password: 87654321
 
   Sales:
     host: querycraft-db.c4fgyo0mielp.us-east-1.rds.amazonaws.com
     port: 5432
     dbname: sales_db
     user: postgres
-    password: 4321
+    password: 87654321
 
   Company:
     host: querycraft-db.c4fgyo0mielp.us-east-1.rds.amazonaws.com
     port: 5432
     dbname: company_db
     user: postgres
-    password: 4321
+    password: 87654321
