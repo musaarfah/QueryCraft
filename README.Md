@@ -5,6 +5,9 @@ A hybrid **Retrieval-Augmented Generation (RAG)** application that supports:
 - Answering natural-language questions from **uploaded documents** (Unstructured Mode)
 - Generating and (optionally) executing **SQL queries** from natural-language (Structured Mode)
 
+**Live App:** [https://query-craft-kappa.vercel.app/](https://query-craft-kappa.vercel.app/)
+
+
 Built with:
 - **Flask** (Python) backend
 - **Next.js** (TypeScript) frontend
