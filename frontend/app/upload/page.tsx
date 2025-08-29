@@ -13,7 +13,8 @@ export default function UploadPage() {
 
     setMessage('Uploading...')
     try {
-      const res = await fetch('http://localhost:8000/upload-doc', {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      const res = await fetch(`${apiUrl}/upload-doc`,  {
         method: 'POST',
         body: formData
       })

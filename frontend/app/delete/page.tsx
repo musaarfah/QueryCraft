@@ -10,7 +10,9 @@ export default function DeletePage() {
     if (!docId.trim()) return
     setMessage('Deleting...')
     try {
-      const res = await fetch('http://localhost:8000/delete-doc', {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      const res = await fetch(`${apiUrl}/delete-doc`, {
+
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ document_id: docId })

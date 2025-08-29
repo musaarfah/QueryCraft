@@ -17,7 +17,9 @@ export default function ListDocsPage() {
     setLoading(true)
     setError('')
     try {
-      const res = await fetch('http://localhost:8000/list-docs')
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      const res = await fetch(`${apiUrl}/list-docs`);
+
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Failed to fetch documents')
       setDocs((data.documents || []).map((doc: string) => ({
