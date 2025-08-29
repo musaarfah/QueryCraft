@@ -122,6 +122,42 @@ Unstructured: { "type":"unstructured", "answer":"...", "sources":[ ... ] }
 Structured: { "type":"structured", "db":"<db>", "sql":"...", "rows":[ ... ] }
 
 ```
+### Example curl:
+```bash
+curl "${API_URL}/health"
+curl -F "file=@/path/to/doc.pdf" "${API_URL}/upload-doc"
+curl "${API_URL}/list-docs"
+curl -X POST -H "Content-Type: application/json" -d '{"document_id":"abc"}' "${API_URL}/delete-doc"
+curl -X POST -H "Content-Type: application/json" -d '{"query":"How many users registered this month?"}' "${API_URL}/query"
+```
+
+- You can also Test in Postman for POST methods.
+
+
+### Backend .env (example)
+
+```bash
+FLASK_ENV=production
+FLASK_APP=app.py
+
+# OpenAI
+OPENAI_API_KEY=sk-...
+
+# Qdrant
+QDRANT_API_KEY=xxxxx
+QDRANT_URL=https://<your-qdrant-host>
+
+# Optional structured DB
+DB_HOST=...
+DB_PORT=5432
+DB_NAME=...
+DB_USER=...
+DB_PASSWORD=...
+
+# App
+PORT=8000
+```
+
 
 ## Frontend (Next.js + TypeScript)
 
@@ -143,4 +179,73 @@ npm run dev
 ```
 
 - note that the backend is made with Flask(CORS) Since it needs to access frontend on Port 3000
+
+## Production Deployment
+
+### Backend — EC2 (Ubuntu) + Gunicorn + Nginx
+1. Create and Ubuntu Instance on AWS management console
+2. Amazon Linux is not feasible for alot of requirements.
+3. Provision EC2 (Ubuntu). Open inbound ports: 22 (SSH), 80, 443. Restrict SSH by IP
+4. Configure an additional inbound rule by opening Port 8000 to access backend on local machine.
+5. SSH into instance, install packages
+```bash
+sudo apt update
+sudo apt install python3 python3-venv python3-pip nginx certbot python3-certbot-nginx -y
+```
+6. Clone backend, create venv, install requirements.
+7. manually test the app first
+8. Create systemd service file
+9. Configure Nginx site 
+10. Enable and reload Nginx
+11. Create an A-record for api.yourdomain.com pointing to your EC2 public IPv4.
+12. Wait for DNS to propagate
+13. Use Certbot on EC2 to provision Let’s Encrypt certs (Nginx integration will auto-configure HTTPS).
+14. Step 13 is only necessary if your frontend is on Vercel.
+
+## Qdrant + OpenAI (RAG flow)
+
+### Indexing
+Extract text from uploaded documents → chunk (e.g., 500–1000 tokens per chunk) → compute embeddings using chosen model → upload vectors + metadata to Qdrant collection.
+
+### Query
+Build embedding for query → Qdrant search → return top K chunks → construct prompt (include selected chunks + user query) → call OpenAI GPT-4 to synthesize final answer and optionally ask it to cite sources or produce SQL if the flow requires.
+
+### Structured Flow
+When request looks DB-related, generate SQL (by rules or using LLM + safety layer), parameterize placeholders, then execute against your DB and return rows.
+
+### Tips
+- Keep Qdrant and OpenAI keys in env vars.
+- Cache embedding results / GPT outputs for repeated queries to reduce cost and latency.
+- Tune Qdrant indexing (HNSW params) for latency vs recall tradeoffs.
+
+## Dockerfile (backend) — for local testing
+```bash
+FROM python:3.11-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+COPY . .
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "app:app"]
+```
+- Image useful for local dev / CI. Production currently uses native EC2 deployment.
+
+## Troubleshooting & Common Pitfalls
+
+### Nginx config errors
+client_max_body_size=100M is invalid — use client_max_body_size 100M;.
+
+### Socket permission 
+If UNIX socket cannot be accessed by Nginx, either set proper permissions or bind Gunicorn to 127.0.0.1:8000 and proxy to that.
+
+### RDS Database
+If you have your databases established locally u need to make your Databases on Aurora & RDS available on AWS and dump your sql in there and after that add the inbound rule to your RDS Security Group for it to be able to be accesed.
+
+### Limitations of AWS free tier
+You have to be careful of resource used, use only what is available 1gb RAM otherwise it may lead to OOM Kills and crash the entire instance.
+
+### Certbot fails 
+Confirm domain resolves to EC2 IP before running Certbot.
+
+### High OpenAI cost 
+Cache results and consider smaller models for non-critical flows.
 
