@@ -1,4 +1,5 @@
 import os
+import json
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 
@@ -35,12 +36,19 @@ ensure_collection(qdrant, settings.COLLECTION_NAME, vector_size)
 _ = get_embedder(settings.EMBED_MODEL)
 
 
-DB_SCHEMAS = {}  # global cache
+DB_CONFIGS_PATH = "db_configs.json"
 
-for db_name, db_config in settings.DATABASES.items():
-    print(f"Loading schema for {db_name}...")
-    schema_dict = extract_schema_to_yaml(db_config, f"structured/{db_name}_schema.yaml")
-    DB_SCHEMAS[db_name] = schema_dict
+def load_db_configs():
+    if not os.path.exists(DB_CONFIGS_PATH):
+        return {}
+    with open(DB_CONFIGS_PATH, "r") as f:
+        return json.load(f)
+
+def save_db_configs(configs):
+    with open(DB_CONFIGS_PATH, "w") as f:
+        json.dump(configs, f, indent=2)
+
+
 
 @app.get("/health")
 def health():
@@ -100,8 +108,34 @@ def delete_doc():
     delete_document(qdrant, settings.COLLECTION_NAME, doc_id)
     return jsonify({"ok": True, "deleted_document_id": doc_id})
 
+@app.post("/add_db")
+def add_db():
+    """
+    JSON: {
+      "name": "HR",
+      "host": "...",
+      "port": 5432,
+      "dbname": "hr_db",
+      "user": "postgres",
+      "password": "..."
+    }
+    """
+    data = request.get_json(force=True)
+    db_name = data.get("name")
+    if not db_name:
+        return jsonify({"error": "Database name required"}), 400
 
+    configs = load_db_configs()
+    configs[db_name] = {
+        "host": data["host"],
+        "port": data["port"],
+        "dbname": data["dbname"],
+        "user": data["user"],
+        "password": data["password"],
+    }
+    save_db_configs(configs)
 
+    return jsonify({"success": True, "databases": list(configs.keys())})
 
 
 
@@ -110,54 +144,69 @@ def query():
     """
     JSON:
       - query: str
-      - top_k: int (optional, only for RAG)
-      - filter_document_id: str (optional, only for RAG)
+      - db_selection: "auto" | "manual"
+      - db_name: str (only if manual)
+      - top_k, filter_document_id (for RAG)
     """
     data = request.get_json(force=True)
     q = data.get("query", "").strip()
+    db_selection = data.get("db_selection", "auto")
+    db_name = data.get("db_name")
 
     if not q:
         return jsonify({"error": "query is required"}), 400
 
-    # classifier decides mode + db
-    decision = classify_query(q, DB_SCHEMAS)
-    mode = decision.get("mode")
-    db_name = decision.get("db_name")
+    configs = load_db_configs()
 
-    if mode == "SQL":
-        if not db_name or db_name not in settings.DATABASES:
-            return jsonify({"error": f"No suitable database found for query"}), 400
+    if db_selection == "manual":
+        # user forces DB
+        if not db_name or db_name not in configs:
+            return jsonify({"error": "Invalid db_name"}), 400
         try:
-            result = run_nl_sql(q, settings.DATABASES[db_name])
+            result = run_nl_sql(q, configs[db_name])
             return jsonify({"type": "structured", "db": db_name, **result})
         except Exception as e:
             return jsonify({"error": str(e)}), 500
 
     else:
-        # fallback → RAG
-        top_k = int(data.get("top_k", settings.TOP_K))
-        filter_doc = data.get("filter_document_id")
+        # auto → classifier decides if SQL or RAG
+        decision = classify_query(q, configs)
+        mode = decision.get("mode")
+        db_name = decision.get("db_name")
 
-        q_vec = embed_texts([q], settings.EMBED_MODEL)[0]
-        hits = search_chunks(
-            qdrant, settings.COLLECTION_NAME, q_vec,
-            limit=top_k, filter_by_doc=filter_doc
-        )
+        if mode == "SQL":
+            if not db_name or db_name not in configs:
+                return jsonify({"error": f"No suitable database found"}), 400
+            try:
+                result = run_nl_sql(q, configs[db_name])
+                return jsonify({"type": "structured", "db": db_name, **result})
+            except Exception as e:
+                return jsonify({"error": str(e)}), 500
+        else:
+            # fallback → RAG (unchanged)
+            top_k = int(data.get("top_k", settings.TOP_K))
+            filter_doc = data.get("filter_document_id")
 
-        answer = make_answer(
-            settings.OPENAI_API_KEY, settings.OPENAI_MODEL, q, hits
-        )
+            q_vec = embed_texts([q], settings.EMBED_MODEL)[0]
+            hits = search_chunks(
+                qdrant, settings.COLLECTION_NAME, q_vec,
+                limit=top_k, filter_by_doc=filter_doc
+            )
 
-        sources = [
-            {
-                "document_id": h["payload"]["document_id"],
-                "source": h["payload"]["source"],
-                "chunk_index": h["payload"]["chunk_index"],
-                "score": h["score"]
-            } for h in hits
-        ]
+            answer = make_answer(
+                settings.OPENAI_API_KEY, settings.OPENAI_MODEL, q, hits
+            )
 
-        return jsonify({"type": "unstructured", "answer": answer, "sources": sources})
+            sources = [
+                {
+                    "document_id": h["payload"]["document_id"],
+                    "source": h["payload"]["source"],
+                    "chunk_index": h["payload"]["chunk_index"],
+                    "score": h["score"]
+                } for h in hits
+            ]
+
+            return jsonify({"type": "unstructured", "answer": answer, "sources": sources})
 
 
 
