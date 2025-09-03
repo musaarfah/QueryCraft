@@ -99,7 +99,7 @@ export default function Home() {
                 Add Database
               </button>
               <button
-                onClick={() => router.push('/query')}
+                onClick={() => router.push('/list-dbs')}
                 className="w-full bg-gray-700 hover:bg-gray-600 text-white font-semibold py-3 rounded-lg transition-colors"
               >
                 List Databases
