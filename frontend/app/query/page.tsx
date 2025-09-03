@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 interface Source {
   document_id: string
@@ -31,6 +31,26 @@ export default function QueryPage() {
   const [response, setResponse] = useState<QueryResponse | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [dbSelection, setDbSelection] = useState<'auto' | 'manual'>('auto')
+  const [dbName, setDbName] = useState('')
+  const [dbList, setDbList] = useState<string[]>([])
+
+  // Load configured DBs
+  useEffect(() => {
+    const fetchDbs = async () => {
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL
+        const res = await fetch(`${apiUrl}/list_dbs`)
+        const data = await res.json()
+        if (res.ok && Array.isArray(data.databases)) {
+          setDbList(data.databases)
+        }
+      } catch (err) {
+        console.error('Failed to fetch databases', err)
+      }
+    }
+    fetchDbs()
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent | React.KeyboardEvent) => {
     e.preventDefault()
@@ -40,11 +60,19 @@ export default function QueryPage() {
     setResponse(null)
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL
+      const body: any = { query, db_selection: dbSelection }
+      
+      // ONLY send database info for manual mode
+      if (dbSelection === 'manual') {
+        body.db_name = dbName
+      }
+      // Auto mode sends NO database selection - backend decides everything
+
       const res = await fetch(`${apiUrl}/query`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query })
+        body: JSON.stringify(body)
       })
 
       const data = await res.json()
@@ -135,8 +163,58 @@ export default function QueryPage() {
       <div className="w-full max-w-3xl">
         <h1 className="text-4xl sm:text-5xl font-extrabold text-purple-400 mb-4">QUERYCRAFT</h1>
         <p className="text-gray-300 mb-6">
-          Query your uploaded documents and generate query output from natural language statements against your databases.
+          Query your uploaded documents or run natural language SQL queries against your databases.
         </p>
+
+        {/* DB Selection Mode */}
+        <div className="flex gap-4 mb-6">
+          <button
+            type="button"
+            onClick={() => setDbSelection('auto')}
+            className={`px-4 py-2 rounded-lg font-semibold ${
+              dbSelection === 'auto' ? 'bg-purple-600 text-white' : 'bg-gray-800 text-gray-300'
+            }`}
+          >
+            Auto (Smart Detection)
+          </button>
+          <button
+            type="button"
+            onClick={() => setDbSelection('manual')}
+            className={`px-4 py-2 rounded-lg font-semibold ${
+              dbSelection === 'manual' ? 'bg-purple-600 text-white' : 'bg-gray-800 text-gray-300'
+            }`}
+          >
+            Manual (Choose Database)
+          </button>
+        </div>
+
+        {/* Auto mode explanation */}
+        {dbSelection === 'auto' && (
+          <div className="mb-6 bg-gray-900 border border-gray-700 rounded-lg p-4">
+            <h3 className="text-purple-400 font-semibold mb-2">Auto Mode</h3>
+            <p className="text-gray-400 text-sm">
+              The system will automatically determine whether to search documents or query databases based on your question.
+            </p>
+          </div>
+        )}
+
+        {/* Manual selection */}
+        {dbSelection === 'manual' && (
+          <select
+            value={dbName}
+            onChange={(e) => setDbName(e.target.value)}
+            className="mb-6 p-3 bg-gray-900 border border-gray-700 rounded-lg text-white w-full"
+          >
+            <option value="">Select a database</option>
+            {dbList.map((db) => (
+              <option key={db} value={db}>
+                {db}
+              </option>
+            ))}
+          </select>
+        )}
+
+        {/* Query Form */}
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <textarea
             value={query}
@@ -154,6 +232,7 @@ export default function QueryPage() {
             {loading ? 'Processing...' : 'Query'}
           </button>
         </form>
+
         {error && <div className="text-red-400 mt-4 font-medium">{error}</div>}
         {response && (
           <div className="mt-8">

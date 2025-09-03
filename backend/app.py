@@ -138,6 +138,18 @@ def add_db():
     return jsonify({"success": True, "databases": list(configs.keys())})
 
 
+@app.get("/list_dbs")
+def list_dbs():
+    """
+    Returns list of configured databases
+    Response: {
+      "databases": ["db1", "db2", ...]
+    }
+    """
+    configs = load_db_configs()
+    return jsonify({"databases": list(configs.keys())})
+
+
 
 @app.post("/query")
 def query():
