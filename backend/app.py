@@ -14,6 +14,7 @@ from services.rag import make_answer
 from services.schema_loader import extract_schema_to_yaml
 from services.classifier import classify_query
 from services.sql_service import run_nl_sql
+from services.schema_manager import load_db_schemas
 
 
 
@@ -169,6 +170,8 @@ def query():
         return jsonify({"error": "query is required"}), 400
 
     configs = load_db_configs()
+    schemas = load_db_schemas(configs)   # <-- build schemas
+
 
     if db_selection == "manual":
         # user forces DB
@@ -182,7 +185,7 @@ def query():
 
     else:
         # auto → classifier decides if SQL or RAG
-        decision = classify_query(q, configs)
+        decision = classify_query(q, schemas)
         mode = decision.get("mode")
         db_name = decision.get("db_name")
 
