@@ -17,7 +17,7 @@ Built with:
 - **Vercel** for frontend hosting
 - **GoDaddy** domain for production API hostname
 
-> Note: A Docker image exists for backend testing, but production runs natively on an **EC2 Ubuntu** instance (you determined EC2 direct deployment to be more efficient for your workload).
+> Note: A Docker image exists for backend testing, but production runs natively on an **EC2 Ubuntu** instance (I determined EC2 direct deployment to be more efficient for my workload).
 
 ---
 
@@ -49,7 +49,7 @@ Built with:
 
 / (repo root)
 ├── .gitignore
-├── README.md # <-- you are editing this
+├── README.md 
 ├── frontend/
 │ ├── app/ # Next.js app router (pages under app/)
 │ ├── public/
