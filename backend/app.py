@@ -151,6 +151,33 @@ def list_dbs():
     return jsonify({"databases": list(configs.keys())})
 
 
+@app.post("/delete_db")
+def delete_db():
+    """
+    JSON:
+      - name: str (database key to remove from configs)
+    """
+    data = request.get_json(force=True)
+    db_name = data.get("name")
+
+    if not db_name:
+        return jsonify({"error": "name is required"}), 400
+
+    configs = load_db_configs()
+
+    if db_name not in configs:
+        return jsonify({"error": f"Database '{db_name}' not found"}), 404
+
+    # remove db
+    del configs[db_name]
+
+    # save updated configs
+    save_db_configs(configs)
+
+    return jsonify({"success": True, "message": f"Database '{db_name}' deleted."})
+
+
+
 
 @app.post("/query")
 def query():

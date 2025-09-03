@@ -102,7 +102,7 @@ export default function Home() {
                 onClick={() => router.push('/query')}
                 className="w-full bg-gray-700 hover:bg-gray-600 text-white font-semibold py-3 rounded-lg transition-colors"
               >
-                View Connected
+                List Databases
               </button>
             </div>
           </div>
