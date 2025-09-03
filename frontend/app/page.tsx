@@ -25,25 +25,15 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-black via-gray-900 to-black px-4 sm:px-6 relative">
+    <div className="min-h-screen flex flex-col items-center justify-start bg-gradient-to-br from-black via-gray-900 to-black px-4 sm:px-6 relative">
       {/* Title */}
-      <div className="text-center mb-12">
+      <div className="text-center mt-20 mb-12"> {/* moved down with mt-20 */}
         <h1
-          className="text-4xl sm:text-7xl font-bold mb-6 tracking-wide text-purple-400 drop-shadow-2xl"
+          className="text-4xl sm:text-7xl font-bold tracking-wide text-purple-400 drop-shadow-2xl"
           style={{ fontFamily: 'Times New Roman, serif' }}
         >
           QUERYCRAFT
         </h1>
-      </div>
-
-      {/* Main Action - Query */}
-      <div className="mb-8 w-full max-w-md">
-        <button
-          onClick={() => router.push('/query')}
-          className="w-full bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white text-xl sm:text-2xl font-bold py-5 rounded-2xl transition-all duration-300 shadow-2xl transform hover:scale-105 hover:shadow-purple-500/25"
-        >
-          🚀 Query
-        </button>
       </div>
 
       {/* Management Section */}
@@ -120,6 +110,16 @@ export default function Home() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Query Button BELOW cards */}
+      <div className="mt-12 w-full max-w-md flex justify-center">
+        <button
+          onClick={() => router.push('/query')}
+          className="w-full bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white text-xl sm:text-2xl font-bold py-5 rounded-2xl transition-all duration-300 shadow-2xl transform hover:scale-105 hover:shadow-purple-500/25"
+        >
+          🚀 Query
+        </button>
       </div>
 
       {/* Footer */}
