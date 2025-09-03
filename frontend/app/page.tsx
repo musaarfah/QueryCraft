@@ -29,15 +29,11 @@ export default function Home() {
       {/* Title */}
       <div className="text-center mb-12">
         <h1
-          className="text-5xl sm:text-8xl font-bold mb-6 tracking-wide text-purple-400 drop-shadow-2xl"
+          className="text-4xl sm:text-7xl font-bold mb-6 tracking-wide text-purple-400 drop-shadow-2xl"
           style={{ fontFamily: 'Times New Roman, serif' }}
         >
           QUERYCRAFT
         </h1>
-        <p className="text-gray-300 text-lg sm:text-xl max-w-2xl mx-auto leading-relaxed">
-          Your intelligent assistant for document search and database queries. 
-          Upload documents, configure databases, and ask questions in natural language.
-        </p>
       </div>
 
       {/* Main Action - Query */}
@@ -46,21 +42,18 @@ export default function Home() {
           onClick={() => router.push('/query')}
           className="w-full bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white text-xl sm:text-2xl font-bold py-5 rounded-2xl transition-all duration-300 shadow-2xl transform hover:scale-105 hover:shadow-purple-500/25"
         >
-          🚀 Start Querying
+          🚀 Query
         </button>
       </div>
 
       {/* Management Section */}
       <div className="w-full max-w-4xl">
-        <h2 className="text-center text-2xl font-semibold text-purple-300 mb-6">Management Tools</h2>
-        
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
           {/* Document Management */}
           <div className="bg-gray-800/50 backdrop-blur-sm border border-purple-500/30 rounded-xl p-6 hover:border-purple-500/60 transition-all duration-300">
             <div className="text-center mb-4">
               <div className="text-4xl mb-3">📄</div>
               <h3 className="text-xl font-semibold text-purple-300 mb-2">Documents</h3>
-              <p className="text-gray-400 text-sm">Manage your document collection</p>
             </div>
             <div className="space-y-3">
               <button
@@ -89,7 +82,6 @@ export default function Home() {
             <div className="text-center mb-4">
               <div className="text-4xl mb-3">🗄️</div>
               <h3 className="text-xl font-semibold text-purple-300 mb-2">Databases</h3>
-              <p className="text-gray-400 text-sm">Configure database connections</p>
             </div>
             <div className="space-y-3">
               <button
@@ -112,7 +104,6 @@ export default function Home() {
             <div className="text-center mb-4">
               <div className="text-4xl mb-3">⚡</div>
               <h3 className="text-xl font-semibold text-purple-300 mb-2">System</h3>
-              <p className="text-gray-400 text-sm">Monitor system health</p>
             </div>
             <div className="space-y-3">
               <button
@@ -122,7 +113,7 @@ export default function Home() {
                 Check Health
               </button>
               {health && (
-                <div className="text-center text-sm font-medium p-2 rounded-lg bg-gray-900/50">
+                <div className="text-center text-sm font-medium p-2 rounded-lg bg-gray-900/50 text-white">
                   {health}
                 </div>
               )}
