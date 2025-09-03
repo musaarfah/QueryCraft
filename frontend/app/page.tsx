@@ -25,7 +25,15 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-black via-gray-900 to-black px-4 sm:px-6">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-black via-gray-900 to-black px-4 sm:px-6 relative">
+      {/* Add DB Button - Top Left */}
+      <button
+        onClick={() => router.push('/add-db')}
+        className="absolute top-4 left-4 bg-purple-600 hover:bg-purple-700 text-white text-sm sm:text-base font-semibold py-2 px-4 rounded-lg transition-colors shadow-md"
+      >
+        Add DB
+      </button>
+
       {/* Title */}
       <h1
         className="text-4xl sm:text-7xl font-bold mb-10 sm:mb-12 tracking-wide text-purple-400 drop-shadow-lg text-center"
@@ -63,10 +71,13 @@ export default function Home() {
         >
           Delete
         </button>
+      </div>
 
+      {/* Query Button - Standalone */}
+      <div className="mt-8 w-full max-w-xs">
         <button
           onClick={() => router.push('/query')}
-          className="bg-purple-600 hover:bg-purple-700 text-white text-base sm:text-lg font-semibold py-3 sm:py-4 rounded-lg transition-colors"
+          className="w-full bg-purple-700 hover:bg-purple-800 text-white text-lg sm:text-xl font-bold py-4 rounded-xl transition-colors shadow-lg"
         >
           Query
         </button>
