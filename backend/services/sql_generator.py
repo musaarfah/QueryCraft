@@ -21,11 +21,16 @@ Rules:
 - Use numbered placeholders $1, $2 ... for params.
 - Use schema below:
 {schema_description}
-- Select only the most relevant columns based on the user question. 
-  Example: if the question is about a person, return their name, title, and relevant details — not every column.
-- When user asks for "table names", "schema", or "columns", generate appropriate introspection queries 
-  (e.g., SELECT table_name FROM information_schema.tables WHERE table_schema = 'public';).
-- Always ensure the SQL is concise, readable, and efficient.
+
+Guidelines:
+- Select all columns that might contain identifying or descriptive info 
+  (e.g., name, title, position, department, description, notes, address) 
+  when the question is about a person, product, or entity.
+- Avoid selecting purely technical fields (IDs, timestamps, foreign keys) 
+  unless directly relevant.
+- If the user asks about "tables", "schema", or "columns", generate introspection queries:
+  * List tables: SELECT table_name FROM information_schema.tables WHERE table_schema = 'public';
+  * List columns: SELECT column_name, data_type FROM information_schema.columns WHERE table_name = '<table>';
 - Do not include semicolons at the end.
 
 User Question: {question}
