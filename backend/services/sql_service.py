@@ -28,39 +28,46 @@ def get_schema_description(db_config, yaml_path: str = None) -> str:
 
 
 
+import re
+
 def make_presentable(rows, schema, sql, max_rows=10):
     """
     Convert raw DB rows -> human-friendly list of dicts.
+    Handles both dict rows (RealDictCursor) and tuple rows.
     Uses schema to only keep descriptive columns if rows are large.
     """
     if not rows:
         return rows
 
     # If too many rows, truncate
-    if len(rows) > max_rows:
-        rows = rows[:max_rows]
+    rows = rows[:max_rows]
 
-    # Parse selected columns from SQL (naive approach)
-    match = re.search(r"select (.+?) from", sql, re.IGNORECASE | re.DOTALL)
-    if match:
-        col_segment = match.group(1).strip()
-        if col_segment != "*":
-            col_names = [c.strip() for c in col_segment.split(",")]
-        else:
-            col_names = [c["name"] for t in schema["tables"] for c in t["columns"]]
+    # If rows are already dicts (RealDictCursor)
+    if isinstance(rows[0], dict):
+        dict_rows = rows
     else:
-        col_names = [f"col{i}" for i in range(len(rows[0]))]
+        # Parse selected columns from SQL (naive approach)
+        match = re.search(r"select (.+?) from", sql, re.IGNORECASE | re.DOTALL)
+        if match:
+            col_segment = match.group(1).strip()
+            if col_segment != "*":
+                col_names = [c.strip() for c in col_segment.split(",")]
+            else:
+                col_names = [c["name"] for t in schema["tables"] for c in t["columns"]]
+        else:
+            col_names = [f"col{i}" for i in range(len(rows[0]))]
 
-    # Convert to list of dicts
-    dict_rows = [dict(zip(col_names, row)) for row in rows]
+        # Convert tuple rows → dict rows
+        dict_rows = [dict(zip(col_names, row)) for row in rows]
 
     # Optional heuristic: filter to descriptive columns if row is very wide
-    if len(col_names) > 6:  
-        keep = [c for c in col_names if any(k in c.lower() for k in ["name", "title", "email", "desc"])]
+    if dict_rows and len(dict_rows[0]) > 6:
+        keep = [c for c in dict_rows[0].keys() if any(k in c.lower() for k in ["name", "title", "email", "desc"])]
         if keep:
-            dict_rows = [{k: r[k] for k in keep if k in r} for r in dict_rows]
+            dict_rows = [{k: r.get(k) for k in keep} for r in dict_rows]
 
     return dict_rows
+
 
 
 def handle_meta_query(question: str, schema_dict: dict):
