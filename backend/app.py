@@ -246,9 +246,8 @@ def query():
                     settings.OPENAI_API_KEY,
                     settings.OPENAI_MODEL,
                     q,
-                    hits,
-                    extra_context=sql_result  # pass SQL result to the LLM
-                )
+                    hits      
+                    )
 
                 sources = [
                     {
