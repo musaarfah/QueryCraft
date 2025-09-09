@@ -10,7 +10,7 @@ from . import sql_generator
 load_dotenv()
 
 
-def get_schema_description(db_config, yaml_path=None, for_prompt: bool = True):
+def get_schema_description(db_config, yaml_path: str = None) -> str:
     """
     Extract schema for a given DB config and return as description string.
     Optionally cache/save to yaml_path.
@@ -18,23 +18,13 @@ def get_schema_description(db_config, yaml_path=None, for_prompt: bool = True):
     Args:
         db_config: connection details
         yaml_path: optional file path to save YAML
-        for_prompt: if True, returns compact prompt-friendly schema
-                    if False, returns verbose schema for debugging
     """
     schema = schema_loader.extract_schema_to_yaml(
         db_config, yaml_path or "structured/schema.yaml"
     )
 
-    if for_prompt:
-        # compact version: fewer columns, good for LLM
-        return schema_loader.schema_to_description(
-            schema, max_cols=5, sort_cols=True, verbose=False
-        )
-    else:
-        # detailed version: all columns, multiline, for inspection
-        return schema_loader.schema_to_description(
-            schema, sort_cols=True, verbose=True
-        )
+    # Use the simpler schema_to_description (always detailed, includes PKs/FKs)
+    return schema_loader.schema_to_description(schema)
 
 
 
