@@ -3,7 +3,7 @@ import os
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-def classify_query(query, all_schemas, client):
+def classify_query(query, all_schemas):
     """
     Classify a query as SQL, RAG, or SQL+RAG.
     
