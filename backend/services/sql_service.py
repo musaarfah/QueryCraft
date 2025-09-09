@@ -30,7 +30,7 @@ def get_schema_description(db_config, yaml_path: str = None) -> str:
 
 import re
 
-def make_presentable(rows, schema, sql, max_rows=10):
+def make_presentable(rows, schema, sql):
     """
     Convert raw DB rows -> human-friendly list of dicts.
     Handles both dict rows (RealDictCursor) and tuple rows.
@@ -40,7 +40,7 @@ def make_presentable(rows, schema, sql, max_rows=10):
         return rows
 
     # If too many rows, truncate
-    rows = rows[:max_rows]
+    # rows = rows[:max_rows]
 
     # If rows are already dicts (RealDictCursor)
     if isinstance(rows[0], dict):
