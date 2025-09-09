@@ -199,7 +199,6 @@ def query():
     configs = load_db_configs()
     schemas = load_db_schemas(configs)   # <-- build schemas
 
-
     if db_selection == "manual":
         # user forces DB
         if not db_name or db_name not in configs:
@@ -211,7 +210,7 @@ def query():
             return jsonify({"error": str(e)}), 500
 
     else:
-        # auto → classifier decides if SQL or RAG
+        # auto → classifier decides if SQL, RAG, or SQL+RAG
         decision = classify_query(q, schemas)
         mode = decision.get("mode")
         db_name = decision.get("db_name")
@@ -224,8 +223,53 @@ def query():
                 return jsonify({"type": "structured", "db": db_name, **result})
             except Exception as e:
                 return jsonify({"error": str(e)}), 500
-        else:
-            # fallback → RAG (unchanged)
+
+        elif mode == "SQL+RAG":
+            if not db_name or db_name not in configs:
+                return jsonify({"error": f"No suitable database found"}), 400
+
+            try:
+                # Step 1 → run SQL query
+                sql_result = run_nl_sql(q, configs[db_name])
+
+                # Step 2 → enrich with RAG
+                top_k = int(data.get("top_k", settings.TOP_K))
+                filter_doc = data.get("filter_document_id")
+                q_vec = embed_texts([q], settings.EMBED_MODEL)[0]
+                hits = search_chunks(
+                    qdrant, settings.COLLECTION_NAME, q_vec,
+                    limit=top_k, filter_by_doc=filter_doc
+                )
+
+                # Step 3 → combine SQL result + documents into one answer
+                combined_answer = make_answer(
+                    settings.OPENAI_API_KEY,
+                    settings.OPENAI_MODEL,
+                    q,
+                    hits,
+                    extra_context=sql_result  # pass SQL result to the LLM
+                )
+
+                sources = [
+                    {
+                        "document_id": h["payload"]["document_id"],
+                        "source": h["payload"]["source"],
+                        "chunk_index": h["payload"]["chunk_index"],
+                        "score": h["score"]
+                    } for h in hits
+                ]
+
+                return jsonify({
+                    "type": "hybrid",
+                    "db": db_name,
+                    "sql_result": sql_result,
+                    "answer": combined_answer,
+                    "sources": sources
+                })
+            except Exception as e:
+                return jsonify({"error": str(e)}), 500
+
+        else:  # fallback → RAG
             top_k = int(data.get("top_k", settings.TOP_K))
             filter_doc = data.get("filter_document_id")
 
@@ -248,7 +292,11 @@ def query():
                 } for h in hits
             ]
 
-            return jsonify({"type": "unstructured", "answer": answer, "sources": sources})
+            return jsonify({
+                "type": "unstructured",
+                "answer": answer,
+                "sources": sources
+            })
 
 
 

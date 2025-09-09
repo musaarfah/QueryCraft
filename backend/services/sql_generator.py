@@ -21,10 +21,17 @@ Rules:
 - Use numbered placeholders $1, $2 ... for params.
 - Use schema below:
 {schema_description}
+- Select only the most relevant columns based on the user question. 
+  Example: if the question is about a person, return their name, title, and relevant details — not every column.
+- When user asks for "table names", "schema", or "columns", generate appropriate introspection queries 
+  (e.g., SELECT table_name FROM information_schema.tables WHERE table_schema = 'public';).
+- Always ensure the SQL is concise, readable, and efficient.
+- Do not include semicolons at the end.
 
 User Question: {question}
 Output:
 """
+
 
 def generate_sql(schema_description, question):
     try:
