@@ -83,7 +83,7 @@ def run_nl_sql(query: str, db_config):
     """
     # 1. Extract schema once
     schema = schema_loader.extract_schema_to_yaml(db_config)
-    schema_desc = schema_loader.schema_to_description(schema, max_cols=5, sort_cols=True)
+    schema_desc = schema_loader.schema_to_description(schema)
 
     # 2. Handle meta queries before LLM
     meta = handle_meta_query(query, schema)
