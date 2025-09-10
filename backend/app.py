@@ -15,6 +15,8 @@ from services.schema_loader import extract_schema_to_yaml
 from services.classifier import classify_query
 from services.sql_service import run_nl_sql
 from services.schema_manager import load_db_schemas
+from services.prompt_manager import load_prompts, save_prompts
+
 
 
 
@@ -175,6 +177,29 @@ def delete_db():
     save_db_configs(configs)
 
     return jsonify({"success": True, "message": f"Database '{db_name}' deleted."})
+
+@app.get("/prompts")
+def get_prompts():
+    prompts = load_prompts()
+    return jsonify(prompts)
+
+@app.post("/update_prompt")
+def update_prompt():
+    """
+    JSON: { "key": "classifier_prompt", "value": "new prompt text" }
+    """
+    data = request.get_json(force=True)
+    key, value = data.get("key"), data.get("value")
+
+    if not key or not value:
+        return jsonify({"error": "key and value required"}), 400
+
+    prompts = load_prompts()
+    prompts[key] = value
+    save_prompts(prompts)
+
+    return jsonify({"success": True, "prompts": prompts})
+
 
 
 
