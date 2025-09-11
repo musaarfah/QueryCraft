@@ -180,26 +180,52 @@ def delete_db():
 
 @app.get("/prompts")
 def get_prompts():
+    """
+    Returns all current prompts.
+
+    Headers:
+      - X-ADMIN-KEY: str (required, must match ADMIN_API_KEY)
+    """
+    api_key = request.headers.get("X-ADMIN-KEY")
+    if api_key != settings.ADMIN_API_KEY:
+        return jsonify({"error": "Unauthorized"}), 401
+
     prompts = load_prompts()
     return jsonify(prompts)
+
 
 @app.post("/update_prompt")
 def update_prompt():
     """
-    JSON: { "key": "classifier_prompt", "value": "new prompt text" }
+    Updates a specific prompt value.
+
+    Headers:
+      - X-ADMIN-KEY: str (required, must match ADMIN_API_KEY)
+
+    JSON:
+      {
+        "key": "classifier_prompt",
+        "value": "new prompt text"
+      }
     """
+    # ---- Authorization check ----
+    api_key = request.headers.get("X-ADMIN-KEY")
+    if api_key != settings.ADMIN_API_KEY:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    # ---- Parse body ----
     data = request.get_json(force=True)
     key, value = data.get("key"), data.get("value")
 
     if not key or not value:
         return jsonify({"error": "key and value required"}), 400
 
+    # ---- Update and save ----
     prompts = load_prompts()
     prompts[key] = value
     save_prompts(prompts)
 
     return jsonify({"success": True, "prompts": prompts})
-
 
 
 

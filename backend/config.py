@@ -27,6 +27,9 @@ class Settings:
         self.STORAGE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "storage"))
         self.DOCS_DIR = os.path.join(self.STORAGE_DIR, "documents")
 
+        # 🔑 Admin key for securing /prompts and /update_prompt
+        self.ADMIN_API_KEY = os.getenv("ADMIN_API_KEY", "changeme")  # fallback to 'changeme'
+
         # Default DB (from env, for backward compatibility)
         self.DB_CONFIG = {
             "host": os.getenv("PG_HOST", "localhost"),
