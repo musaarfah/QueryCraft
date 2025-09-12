@@ -61,12 +61,12 @@ def make_presentable(rows, schema, sql):
         dict_rows = [dict(zip(col_names, row)) for row in rows]
 
     # Optional heuristic: filter to descriptive columns if row is very wide
-    if dict_rows and len(dict_rows[0]) > 6:
-        keep = [c for c in dict_rows[0].keys() if any(k in c.lower() for k in ["name", "title", "email", "desc"])]
-        if keep:
-            dict_rows = [{k: r.get(k) for k in keep} for r in dict_rows]
+    # if dict_rows and len(dict_rows[0]) > 6:
+    #     keep = [c for c in dict_rows[0].keys() if any(k in c.lower() for k in ["name", "title", "email", "desc"])]
+    #     if keep:
+    #         dict_rows = [{k: r.get(k) for k in keep} for r in dict_rows]
 
-    return dict_rows
+    # return dict_rows
 
 
 
