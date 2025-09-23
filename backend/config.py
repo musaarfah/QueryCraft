@@ -39,5 +39,13 @@ class Settings:
             "password": os.getenv("PG_PASSWORD", "4321"),
         }
 
+        self.AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
+        self.AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
+        self.AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
+        self.S3_BUCKET = os.getenv("S3_BUCKET")
+
+        # Celery / Redis
+        self.REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+
 settings = Settings()
 os.makedirs(settings.DOCS_DIR, exist_ok=True)

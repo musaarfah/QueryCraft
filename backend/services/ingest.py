@@ -11,6 +11,14 @@ def extract_text_from_pdf(file_path):
             text.append(page.get_text())
     return "\n".join(text)
 
+def extract_text_from_pdf_stream(body):
+    data = body.read()
+    text = []
+    with fitz.open(stream=data, filetype="pdf") as doc:
+        for page in doc:
+            text.append(page.get_text())
+    return "\n".join(text)
+
 def extract_text_from_docx(file_path):
     doc = Document(file_path)
     return "\n".join(p.text for p in doc.paragraphs)

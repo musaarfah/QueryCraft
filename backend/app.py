@@ -16,6 +16,10 @@ from services.classifier import classify_query
 from services.sql_service import run_nl_sql
 from services.schema_manager import load_db_schemas
 from services.prompt_manager import load_prompts, save_prompts
+from s3_client import upload_stream
+from db import init_db, Documents, SessionLocal
+from celery_app import celery_app
+from tasks import process_document_task
 
 
 
@@ -37,6 +41,9 @@ ensure_collection(qdrant, settings.COLLECTION_NAME, vector_size)
 
 # Warm embedder once
 _ = get_embedder(settings.EMBED_MODEL)
+
+# ---- Initialize DB tables ----
+init_db()
 
 
 DB_CONFIGS_PATH = "db_configs.json"
@@ -77,21 +84,27 @@ def upload_doc():
         return jsonify({"error": "empty filename"}), 400
 
     document_id = request.form.get("document_id") or make_document_id(f.filename)
-    save_path = os.path.join(settings.DOCS_DIR, f"{document_id}_{f.filename}")
-    f.save(save_path)
 
+    # Build S3 key: doc/{document_id}/{original_filename}
+    s3_key = f"documents/{document_id}/{f.filename}"
     try:
-        text = extract_text(save_path)
-        chunks = chunk_text(text)
-        vectors = embed_texts(chunks, settings.EMBED_MODEL)
-        upsert_chunks(
-            qdrant, settings.COLLECTION_NAME, vectors,
-            chunks, document_id=document_id, source_name=f.filename
-        )
+        # Stream upload to S3 directly
+        upload_stream(settings.S3_BUCKET, s3_key, f.stream, content_type=f.mimetype)
+
+        # Insert DB row with pending status into existing public.documents
+        db = SessionLocal()
+        doc = Documents(id=document_id, file_url=f"s3://{settings.S3_BUCKET}/{s3_key}", status="pending", chunks=0)
+        db.add(doc)
+        db.commit()
+        db.close()
+
+        # Enqueue background processing task (use document_id for lookups)
+        process_document_task.delay(document_id, document_id, s3_key, f.filename)
+
         return jsonify({
             "ok": True,
             "document_id": document_id,
-            "chunks": len(chunks)
+            "status": "processing"
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
