@@ -18,3 +18,5 @@ celery_app.conf.update(
 
 
 
+# Ensure task modules are registered when the worker starts
+import tasks  # noqa: E402,F401

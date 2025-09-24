@@ -16,7 +16,7 @@ from services.classifier import classify_query
 from services.sql_service import run_nl_sql
 from services.schema_manager import load_db_schemas
 from services.prompt_manager import load_prompts, save_prompts
-from s3_client import upload_stream
+from s3_client import upload_stream, delete_object
 from db import init_db, Documents, SessionLocal
 from celery_app import celery_app
 from tasks import process_document_task
@@ -121,7 +121,30 @@ def delete_doc():
     if not doc_id:
         return jsonify({"error": "document_id is required"}), 400
 
+    # Delete vectors from Qdrant first
     delete_document(qdrant, settings.COLLECTION_NAME, doc_id)
+
+    # Remove S3 object based on stored file_url, then remove DB row
+    db = SessionLocal()
+    try:
+        rec = db.get(Documents, doc_id)
+        if rec and rec.file_url and rec.file_url.startswith("s3://"):
+            # file_url: s3://<bucket>/<key>
+            _, _, rest = rec.file_url.partition("s3://")
+            bucket, _, key = rest.partition("/")
+            if bucket and key:
+                try:
+                    delete_object(bucket, key)
+                except Exception:
+                    # best-effort delete; ignore errors to not block API
+                    pass
+        # finally, delete DB row
+        if rec:
+            db.delete(rec)
+            db.commit()
+    finally:
+        db.close()
+
     return jsonify({"ok": True, "deleted_document_id": doc_id})
 
 @app.post("/add_db")

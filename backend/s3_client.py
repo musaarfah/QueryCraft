@@ -27,3 +27,7 @@ def get_object_stream(bucket: str, key: str) -> BinaryIO:
 
 
 
+def delete_object(bucket: str, key: str) -> None:
+    client = get_s3_client()
+    client.delete_object(Bucket=bucket, Key=key)
+
