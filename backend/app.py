@@ -110,6 +110,47 @@ def upload_doc():
         return jsonify({"error": str(e)}), 500
 
 
+@app.post("/upload-docs")
+def upload_docs():
+    """
+    multipart/form-data:
+      - files: multiple files (pdf/docx/odt/txt), up to 100
+    """
+    files = request.files.getlist("files")
+    if not files:
+        # Fallback: support 'file' with multiple selection in some browsers
+        files = request.files.getlist("file")
+    if not files:
+        return jsonify({"error": "files missing"}), 400
+
+    if len(files) > 100:
+        return jsonify({"error": "Too many files. Max 100."}), 400
+
+    results = []
+    db = SessionLocal()
+    try:
+        for f in files:
+            if not f or not f.filename:
+                results.append({"filename": getattr(f, 'filename', ''), "ok": False, "error": "empty filename"})
+                continue
+
+            document_id = make_document_id(f.filename)
+            s3_key = f"documents/{document_id}/{f.filename}"
+            try:
+                upload_stream(settings.S3_BUCKET, s3_key, f.stream, content_type=f.mimetype)
+                doc = Documents(id=document_id, file_url=f"s3://{settings.S3_BUCKET}/{s3_key}", status="pending", chunks=0)
+                db.add(doc)
+                db.commit()
+                process_document_task.delay(document_id, document_id, s3_key, f.filename)
+                results.append({"filename": f.filename, "ok": True, "document_id": document_id, "status": "processing"})
+            except Exception as exc:
+                db.rollback()
+                results.append({"filename": f.filename, "ok": False, "error": str(exc)})
+    finally:
+        db.close()
+
+    return jsonify({"results": results})
+
 @app.post("/delete-doc")
 def delete_doc():
     """
